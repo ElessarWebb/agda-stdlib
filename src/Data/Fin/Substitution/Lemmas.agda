@@ -346,6 +346,15 @@ record Lemmas₄ {ℓ} (T : Pred ℕ ℓ) : Set ℓ where
     lookup x ρ / wk          ≡⟨ cong₂ _/_ (sym var-/) refl ⟩
     var x / ρ / wk           ∎
 
+  tail-⊙-head : ∀ {n m}(φ : Sub T (suc n) m) → (tail φ) ↑ ⊙ sub (head φ) ≡ φ
+  tail-⊙-head (h ∷ φ) = begin
+    φ ↑ ⊙ sub h ≡⟨ refl ⟩
+    var zero / sub h ∷ (map weaken φ) ⊙ (sub h) ≡⟨ cong₂ _∷_ var-/ (cong (_⊙ _) map-weaken) ⟩
+    h ∷ (φ ⊙ wk) ⊙ sub h                        ≡⟨ cong (_ ∷_) (sym ⊙-assoc)  ⟩
+    h ∷ φ ⊙ (wk ⊙ sub h)                        ≡⟨ cong (λ θ → _ ∷ φ ⊙ θ) wk-⊙-sub ⟩
+    h ∷ φ ⊙ id                                  ≡⟨ cong (_ ∷_) ⊙-id ⟩
+    h ∷ φ                                       ∎
+
   open Lemmas₃ lemmas₃ public
     hiding (/✶-↑✶; /✶-↑✶′; wk-↑⋆-⊙-wk;
             lookup-wk-↑⋆-⊙; lookup-map-weaken-↑⋆)
@@ -400,6 +409,12 @@ record AppLemmas {ℓ₁ ℓ₂} (T₁ : Pred ℕ ℓ₁) (T₂ : Pred ℕ ℓ�
 
   /-weaken : ∀ {m n} {ρ : Sub T₂ m n} t → t / map weaken ρ ≡ t / ρ / wk
   /-weaken {ρ = ρ} = ⨀→/✶ (ε ▻ map weaken ρ) (ε ▻ ρ ▻ wk) L₄.map-weaken
+
+  _/tail/head : ∀ {n m}{φ : Sub T₂ (suc n) m} t → t / (tail φ) ↑ / sub (head φ) ≡ t / φ
+  _/tail/head {φ = h ∷ φ} t = begin
+    t / φ ↑ / sub h ≡⟨ sym (/-⊙ t) ⟩
+    t / φ ↑ ⊙ sub h ≡⟨ cong (t /_) (L₄.tail-⊙-head (h ∷ φ)) ⟩
+    t / (h ∷ φ) ∎
 
   open Application application public
   open L₄ public
