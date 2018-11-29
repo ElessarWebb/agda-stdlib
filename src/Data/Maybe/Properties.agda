@@ -14,6 +14,7 @@ import Algebra.FunctionProperties as FunctionProperties
 open import Data.Maybe.Base
 open import Data.Maybe.All using (All; just; nothing)
 open import Data.Product using (_,_)
+open import Relation.Nullary
 open import Function
 
 open import Relation.Binary.PropositionalEquality
@@ -25,6 +26,9 @@ module _ {a} {A : Set a} where
 
   just-injective : ∀ {x y} → (Maybe A ∋ just x) ≡ just y → x ≡ y
   just-injective refl = refl
+
+  just-not-nothing : ∀ {x : Maybe A}{y : A} → x ≡ just y → ¬ (x ≡ nothing)
+  just-not-nothing refl ()
 
 ------------------------------------------------------------------------
 -- map
