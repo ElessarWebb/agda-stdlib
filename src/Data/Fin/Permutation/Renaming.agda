@@ -7,7 +7,7 @@ open import Data.Nat
 open import Data.Fin.Permutation renaming (Permutation to Renaming)
 open import Data.List
 
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality as P using (_≡_; refl)
 
 {- Permutable things -}
 record Rename {ℓ₁}(T : ℕ → Set ℓ₁) : Set ℓ₁ where
@@ -36,10 +36,10 @@ module TermRenaming {ℓ₁}(T : ℕ → Set ℓ₁)(TRen : Rename T) where
     ≈αEquiv : ∀ {n} → IsEquivalence (_≈α_ {n})
     IsEquivalence.refl ≈αEquiv {t} = record { ρ = id ; prf = id-vanishes t }
     IsEquivalence.trans ≈αEquiv (ren ρ₁ refl) (ren ρ₂ refl) =
-      ren (ρ₁ ∘ₚ ρ₂) (sym (permute-∘ₚ _ ρ₁ ρ₂))
+      ren (ρ₁ ∘ₚ ρ₂) (P.sym (permute-∘ₚ _ ρ₁ ρ₂))
     IsEquivalence.sym ≈αEquiv (ren ρ refl) = ren (flip ρ) (inverse-vanishes _ ρ)
 
-    α-setoid : ∀ {n} → Setoid _ _
-    Setoid.Carrier (α-setoid {n}) = T n
-    Setoid._≈_ α-setoid = _≈α_
-    Setoid.isEquivalence α-setoid = ≈αEquiv
+    setoid : ∀ {n} → Setoid _ _
+    Setoid.Carrier (setoid {n}) = T n
+    Setoid._≈_ setoid = _≈α_
+    Setoid.isEquivalence setoid = ≈αEquiv
