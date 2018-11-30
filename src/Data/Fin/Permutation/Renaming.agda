@@ -15,6 +15,7 @@ record Rename {ℓ₁}(T : ℕ → Set ℓ₁) : Set ℓ₁ where
   field
     rename : ∀ {m n} → Renaming m n → T m → T n
 
+
 module RenamingSetoid {ℓ₁ ℓ₂} (iset : IndexedSetoid ℕ ℓ₁ ℓ₂) where
   module TSet = IndexedSetoid iset
   open IndexedSetoid iset
@@ -22,6 +23,15 @@ module RenamingSetoid {ℓ₁ ℓ₂} (iset : IndexedSetoid ℕ ℓ₁ ℓ₂) w
     renaming (
       Carrierᵢ to T
       ; _≈ᵢ_ to _T≈_)
+
+  module RenameEquivalence (app : Rename T) where
+    open Rename app
+
+    record _≈_ {n} (t₁ t₂ : T n) : Set ℓ₂ where
+      constructor ren
+      field
+        ρ   : Renaming n n
+        prf : rename ρ t₁ T≈ t₂
 
   record RenameLemmas : Set (ℓ₁ ⊔ ℓ₂) where
     field
@@ -42,12 +52,7 @@ module RenamingSetoid {ℓ₁ ℓ₂} (iset : IndexedSetoid ℕ ℓ₁ ℓ₂) w
       lemmas   : RenameLemmas
 
     open RenameLemmas lemmas
-
-    record _≈_ {n} (t₁ t₂ : T n) : Set ℓ₂ where
-      constructor ren
-      field
-        ρ   : Renaming n n
-        prf : rename ρ t₁ T≈ t₂
+    open RenameEquivalence app
 
     open _≈_
     open IsIndexedEquivalence
@@ -71,4 +76,4 @@ module RenamingSetoid {ℓ₁ ℓ₂} (iset : IndexedSetoid ℕ ℓ₁ ℓ₂) w
 
 module Propositional {ℓᵢ} (T : ℕ → Set ℓᵢ) where
   open import Relation.Binary.Indexed.Homogeneous.Construct.Propositional
-  open RenamingSetoid (indexedSetoid T)
+  open RenamingSetoid (indexedSetoid T) public

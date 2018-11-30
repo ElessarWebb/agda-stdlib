@@ -15,8 +15,9 @@ module _ {ℓ}{A : Set ℓ} where
   vecRename : Rename (Vec A)
   vecRename = record { rename = permute }
 
-  open TermRenaming (Vec A) vecRename
+  open Propositional
+  open RenameEquivalence (Vec A) vecRename
 
   Permutation : ∀ {n} → Rel (Vec A n) ℓ
-  Permutation = _≈α_
+  Permutation = _≈_
     
