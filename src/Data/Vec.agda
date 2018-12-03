@@ -195,13 +195,12 @@ count P? (x ∷ xs) with P? x
 [_] : ∀ {a} {A : Set a} → A → Vec A 1
 [ x ] = x ∷ []
 
-replicate : ∀ {a n} {A : Set a} → A → Vec A n
-replicate {n = zero}  x = []
-replicate {n = suc n} x = x ∷ replicate x
-
 tabulate : ∀ {n a} {A : Set a} → (Fin n → A) → Vec A n
 tabulate {zero}  f = []
 tabulate {suc n} f = f zero ∷ tabulate (f ∘ suc)
+
+replicate : ∀ {a n} {A : Set a} → A → Vec A n
+replicate = tabulate ∘ const
 
 allFin : ∀ n → Vec (Fin n) n
 allFin _ = tabulate id
