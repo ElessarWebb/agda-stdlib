@@ -8,10 +8,12 @@
 
 module Data.List.Relation.Sublist.Propositional.Properties where
 
-open import Data.Empty
+open import Data.Vec using ([]; _∷_)
+open import Data.Empty hiding (⊥)
+open import Data.Product hiding (map)
 open import Data.List.Base hiding (lookup)
 open import Data.List.Properties
-open import Data.List.Any using (here; there)
+open import Data.List.Any using (here; there; satisfied)
 open import Data.List.Any.Properties using (here-injective; there-injective)
 open import Data.List.Membership.Propositional
 open import Data.List.Relation.Sublist.Propositional
@@ -217,6 +219,10 @@ module _ {a} {A : Set a} where
   ∷⁻ (skip p) = ⊆-trans (skip ⊆-refl) p
   ∷⁻ (keep p) = p
 
+  ∷-⊈ : ∀ {x : A} {xs} → ¬ (x ∷ xs ⊆ xs)
+  ∷-⊈ p with ⊆-antisym p (skip (⊆-reflexive refl))
+  ∷-⊈ p | ()
+
 -- map
 
 module _ {a b} {A : Set a} {B : Set b} where
@@ -372,3 +378,57 @@ module Decidable
   x ∷ xs ⊆? y ∷ ys with eq? x y
   ... | yes refl = D.map (keep⁻¹ x) (xs ⊆? ys)
   ... | no ¬eq   = D.map (skip⁻¹ ¬eq) (x ∷ xs ⊆? ys)
+
+------------------------------------------------------------------------
+-- A sublist
+
+module _ {a} {A : Set a} where
+
+  record Sublist (xs : List A) : Set a where
+    constructor -⊆
+    field
+      {reify}    : List A
+      isSublist  : reify ⊆ xs
+
+  open Sublist using (reify)
+
+  keep⁺ : ∀ {l} x → Sublist l → Sublist (x ∷ l)
+  keep⁺ x (-⊆ p) = -⊆ (keep p)
+
+  skip⁺ : ∀ {l} x → Sublist l → Sublist (x ∷ l)
+  skip⁺ x (-⊆ p) = -⊆ (skip p)
+
+  ⊤ : ∀ {l} → Sublist l
+  ⊤     = -⊆ ⊆-refl
+
+  ⊥ : ∀ {l} → Sublist l
+  ⊥ {l} = -⊆ ([]⊆ l) 
+
+  Empty : ∀ {l} → Sublist l → Set a
+  Empty (-⊆ {ys} prf) = ∃ λ y → y ∈ ys
+
+  _∪_ : ∀ {l} → (xs ys : Sublist l) → Sublist l
+  _∪_ {[]}    _              _            = -⊆ ([]⊆ [])
+  _∪_ {x ∷ l} (-⊆ (keep p)) (-⊆ (keep q)) = keep⁺ x (-⊆ p ∪ -⊆ q)
+  _∪_ {x ∷ l} (-⊆ (keep p)) (-⊆ (skip q)) = keep⁺ x (-⊆ p ∪ -⊆ q)
+  _∪_ {x ∷ l} (-⊆ (skip p)) (-⊆ (keep q)) = keep⁺ x (-⊆ p ∪ -⊆ q)
+  _∪_ {x ∷ l} (-⊆ (skip p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∪ -⊆ q)
+
+  _∩_ : ∀ {l} → (xs ys : Sublist l) → Sublist l
+  _∩_ {[]}    _              _            = -⊆ ([]⊆ [])
+  _∩_ {x ∷ l} (-⊆ (keep p)) (-⊆ (keep q)) = keep⁺ x (-⊆ p ∩ -⊆ q)
+  _∩_ {x ∷ l} (-⊆ (keep p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
+  _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (keep q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
+  _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
+
+  ⊤-unique : ∀ {l}(σ : Sublist l) → reify σ ≡ l → σ ≡ ⊤
+  ⊤-unique (-⊆ base)                      refl = refl
+  ⊤-unique (-⊆ {y ∷ ys} (skip isSublist)) refl = ⊥-elim (∷-⊈ isSublist)
+  ⊤-unique (-⊆ {y ∷ ys} (keep isSublist)) p with ⊤-unique (-⊆ isSublist) (∷-injectiveʳ p)
+  ⊤-unique (-⊆ {x ∷ ys} (keep .(⊆-reflexive refl))) p | refl = refl
+
+module _ {a b} {A : Set a} {B : Set b} where
+ 
+  ⊆-map⁺ : ∀ {l}(f : A → B) → Sublist l → Sublist (map f l)
+  ⊆-map⁺ f (-⊆ prf) = -⊆ (map⁺ f prf)
+
