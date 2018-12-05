@@ -80,6 +80,9 @@ nonempty? p = any? (_∈? p)
 ∉⊥ : ∀ {n} {x : Fin n} → x ∉ ⊥
 ∉⊥ (there p) = ∉⊥ p
 
+⊥-Empty : ∀ {n} → Empty {n} ⊥
+⊥-Empty (_ , x∈⊥) = ∉⊥ x∈⊥
+
 ⊥⊆ : ∀ {n} {p : Subset n} → ⊥ ⊆ p
 ⊥⊆ x∈⊥ = contradiction x∈⊥ ∉⊥
 
