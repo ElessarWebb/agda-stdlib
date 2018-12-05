@@ -387,81 +387,105 @@ module _ {a} {A : Set a} where
   open import Relation.Binary.Indexed.Homogeneous using (IRel)
 
   record Sublist (xs : List A) : Set a where
-    constructor -⊆
+    constructor sub
     field
       {reify} : List A
       le      : reify ⊆ xs
 
   open Sublist using (reify)
 
-  keep⁺ : ∀ {l} x → Sublist l → Sublist (x ∷ l)
-  keep⁺ x (-⊆ p) = -⊆ (keep p)
+  keep! : ∀ {x l} → Sublist l → Sublist (x ∷ l)
+  keep! (sub p) = sub (keep p)
 
-  skip⁺ : ∀ {l} x → Sublist l → Sublist (x ∷ l)
-  skip⁺ x (-⊆ p) = -⊆ (skip p)
+  skip! : ∀ {x l} → Sublist l → Sublist (x ∷ l)
+  skip! (sub p) = sub (skip p)
+
+  pattern base? = sub base
+  pattern skip? x = sub (skip x)
+  pattern keep? x = sub (keep x)
 
   ⊤ : ∀ {l} → Sublist l
-  ⊤     = -⊆ ⊆-refl
+  ⊤     = sub ⊆-refl
 
   ⊥ : ∀ {l} → Sublist l
-  ⊥ {l} = -⊆ ([]⊆ l) 
+  ⊥ {l} = sub ([]⊆ l) 
 
   NonEmpty : ∀ {l} → Sublist l → Set a 
-  NonEmpty (-⊆ {ys} prf) = ∃ λ y → y ∈ ys
+  NonEmpty (sub {ys} prf) = ∃ λ y → y ∈ ys
 
   Empty : ∀ {l} → Sublist l → Set a
-  Empty (-⊆ {xs} _) = xs ≡ []
+  Empty (sub {xs} _) = xs ≡ []
 
   Every : ∀ {l} → Sublist l → Set a
-  Every {l} (-⊆ {xs} _) = xs ≡ l
+  Every {l} (sub {xs} _) = xs ≡ l
 
   _∪_ : ∀ {l} → (xs ys : Sublist l) → Sublist l
-  _∪_ {[]}    _              _            = -⊆ ([]⊆ [])
-  _∪_ {x ∷ l} (-⊆ (keep p)) (-⊆ (keep q)) = keep⁺ x (-⊆ p ∪ -⊆ q)
-  _∪_ {x ∷ l} (-⊆ (keep p)) (-⊆ (skip q)) = keep⁺ x (-⊆ p ∪ -⊆ q)
-  _∪_ {x ∷ l} (-⊆ (skip p)) (-⊆ (keep q)) = keep⁺ x (-⊆ p ∪ -⊆ q)
-  _∪_ {x ∷ l} (-⊆ (skip p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∪ -⊆ q)
+  _∪_ base?     _         = sub ([]⊆ [])
+  _∪_ (keep? p) (keep? q) = keep! (sub p ∪ sub q)
+  _∪_ (keep? p) (skip? q) = keep! (sub p ∪ sub q)
+  _∪_ (skip? p) (keep? q) = keep! (sub p ∪ sub q)
+  _∪_ (skip? p) (skip? q) = skip! (sub p ∪ sub q)
 
   _∩_ : ∀ {l} → (xs ys : Sublist l) → Sublist l
-  _∩_ {[]}    _              _            = -⊆ ([]⊆ [])
-  _∩_ {x ∷ l} (-⊆ (keep p)) (-⊆ (keep q)) = keep⁺ x (-⊆ p ∩ -⊆ q)
-  _∩_ {x ∷ l} (-⊆ (keep p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
-  _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (keep q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
-  _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
+  _∩_ base?     _         = sub ([]⊆ [])
+  _∩_ (keep? p) (keep? q) = keep! (sub p ∩ sub q)
+  _∩_ (keep? p) (skip? q) = skip! (sub p ∩ sub q)
+  _∩_ (skip? p) (keep? q) = skip! (sub p ∩ sub q)
+  _∩_ (skip? p) (skip? q) = skip! (sub p ∩ sub q)
+
+  _◆_ : ∀ {l} → (xs ys : Sublist l) → Set a
+  xs ◆ ys = Empty (xs ∩ ys)
 
   Lift : ∀ {p} → Pred (List A) p → IPred Sublist p
-  Lift P (-⊆ {xs} _) = P xs
+  Lift P (sub {xs} _) = P xs
 
   Lift₂ : ∀ {p} → Rel (List A) p → IRel Sublist p
-  Lift₂ R (-⊆ {xs} _) (-⊆ {ys} _) = R xs ys
+  Lift₂ R (sub {xs} _) (sub {ys} _) = R xs ys
 
   _⊑_ : IRel Sublist _
   _⊑_ = Lift₂ _⊆_
 
-  p⊑p∪q : ∀ {l} {p : Sublist l} (q : Sublist l) → p ⊑ (p ∪ q)
-  p⊑p∪q {p = -⊆ base} _ = base
-  p⊑p∪q {p = -⊆ (skip le)} (-⊆ (skip le')) = p⊑p∪q (-⊆ le')
-  p⊑p∪q {p = -⊆ (skip le)} (-⊆ (keep le')) = skip (p⊑p∪q (-⊆ le'))
-  p⊑p∪q {p = -⊆ (keep le)} (-⊆ (skip le')) = keep (p⊑p∪q (-⊆ le'))
-  p⊑p∪q {p = -⊆ (keep le)} (-⊆ (keep le')) = keep (p⊑p∪q (-⊆ le'))
+  ∪-comm : ∀ {l} (xs ys : Sublist l) → xs ∪ ys ≡ ys ∪ xs
+  ∪-comm (sub base) (sub base) = refl
+  ∪-comm (skip? le) (skip? le') = cong skip! (∪-comm (sub le) (sub le'))
+  ∪-comm (skip? le) (keep? le') = cong keep! (∪-comm (sub le) (sub le'))
+  ∪-comm (keep? le) (skip? le') = cong keep! (∪-comm (sub le) (sub le'))
+  ∪-comm (keep? le) (keep? le') = cong keep! (∪-comm (sub le) (sub le'))
+
+  ∩-comm : ∀ {l} (xs ys : Sublist l) → xs ∩ ys ≡ ys ∩ xs
+  ∩-comm (sub base) (sub base) = refl
+  ∩-comm (skip? le) (skip? le') = cong skip! (∩-comm (sub le) (sub le'))
+  ∩-comm (skip? le) (keep? le') = cong skip! (∩-comm (sub le) (sub le'))
+  ∩-comm (keep? le) (skip? le') = cong skip! (∩-comm (sub le) (sub le'))
+  ∩-comm (keep? le) (keep? le') = cong keep! (∩-comm (sub le) (sub le'))
+
+  p⊑p∪q : ∀ {l} (p : Sublist l) (q : Sublist l) → p ⊑ (p ∪ q)
+  p⊑p∪q base?      base? = base
+  p⊑p∪q (skip? le) (skip? le') = p⊑p∪q (sub le) (sub le')
+  p⊑p∪q (skip? le) (keep? le') = skip (p⊑p∪q (sub le) (sub le'))
+  p⊑p∪q (keep? le) (skip? le') = keep (p⊑p∪q (sub le) (sub le'))
+  p⊑p∪q (keep? le) (keep? le') = keep (p⊑p∪q (sub le) (sub le'))
+
+  q⊑p∪q : ∀ {l} {p : Sublist l} (q : Sublist l) → q ⊑ (p ∪ q)
+  q⊑p∪q {p = p} q rewrite ∪-comm p q = p⊑p∪q q p
 
   ⊥-Empty : ∀ {l} → Empty (⊥ {l})
   ⊥-Empty {l} = refl
 
   ⊥-unique : ∀ {l}{xs : Sublist l} → Empty xs → xs ≡ ⊥
-  ⊥-unique {xs = -⊆ base} p = refl
-  ⊥-unique {xs = -⊆ (skip le)} p with ⊥-unique {xs = -⊆ le} p
+  ⊥-unique {xs = base?} p = refl
+  ⊥-unique {xs = skip? le} p with ⊥-unique {xs = sub le} p
   ... | refl = refl
-  ⊥-unique {xs = -⊆ (keep le)} ()
+  ⊥-unique {xs = keep? le} ()
 
   ⊤-unique : ∀ {l}(σ : Sublist l) → Every σ → σ ≡ ⊤
-  ⊤-unique (-⊆ base)                      refl = refl
-  ⊤-unique (-⊆ {y ∷ ys} (skip isSublist)) refl = ⊥-elim (∷-⊈ isSublist)
-  ⊤-unique (-⊆ {y ∷ ys} (keep isSublist)) p with ⊤-unique (-⊆ isSublist) (∷-injectiveʳ p)
-  ⊤-unique (-⊆ {x ∷ ys} (keep .(⊆-reflexive refl))) p | refl = refl
+  ⊤-unique (base? )                      refl = refl
+  ⊤-unique (skip? xs) refl = ⊥-elim (∷-⊈ xs)
+  ⊤-unique (keep? xs) p with ⊤-unique (sub xs) (∷-injectiveʳ p)
+  ⊤-unique (keep? .(⊆-reflexive refl)) p | refl = refl
 
 module _ {a b} {A : Set a} {B : Set b} where
  
   ⊆-map⁺ : ∀ {l}(f : A → B) → Sublist l → Sublist (map f l)
-  ⊆-map⁺ f (-⊆ prf) = -⊆ (map⁺ f prf)
+  ⊆-map⁺ f (sub prf) = sub (map⁺ f prf)
 
