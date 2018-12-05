@@ -47,8 +47,7 @@ Subset = Vec Side
 
 -- A singleton subset, containing just the given element.
 ⁅_⁆ : ∀ {n} → Fin n → Subset n
-⁅ zero  ⁆ = inside  ∷ ⊥
-⁅ suc i ⁆ = outside ∷ ⁅ i ⁆
+⁅ k ⁆ = replicate outside [ k ]≔ inside
 
 ------------------------------------------------------------------------
 -- Membership and subset predicates

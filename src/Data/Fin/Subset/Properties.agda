@@ -14,21 +14,24 @@ import Algebra.Structures as AlgebraicStructures
 import Algebra.Properties.Lattice as L
 import Algebra.Properties.DistributiveLattice as DL
 import Algebra.Properties.BooleanAlgebra as BA
+import Function.Inverse as Inv
 open import Data.Bool.Properties
-open import Data.Fin using (Fin; suc; zero)
+open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.Fin.Subset
 open import Data.Fin.Properties using (any?; decFinSubset)
+open import Data.Fin.Permutation using (Permutation; _⟨$⟩ʳ_; _⟨$⟩ˡ_; ↔⇒≡; inverseʳ)
 open import Data.Nat.Base using (ℕ; zero; suc; z≤n; s≤s; _≤_)
 open import Data.Nat.Properties using (≤-step)
 open import Data.Product as Product using (∃; ∄; _×_; _,_)
 open import Data.Sum as Sum using (_⊎_; inj₁; inj₂)
 open import Data.Vec
 open import Data.Vec.Properties
+open import Data.Vec.Permutation renaming (Permutation to Vecpermutation)
 open import Function using (_∘_; const; id; case_of_)
 open import Function.Equivalence using (_⇔_; equivalence)
 open import Relation.Binary as B hiding (Decidable)
-open import Relation.Binary.PropositionalEquality
-  using (_≡_; refl; cong; cong₂; subst; isEquivalence)
+open import Relation.Binary.PropositionalEquality as P
+  using (_≡_; _≢_; refl; cong; cong₂; subst; isEquivalence)
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Unary using (Pred; Decidable)
@@ -124,6 +127,30 @@ x∈⁅y⁆⇔x≡y {_} {x} {y} = equivalence
 ∣⁅x⁆∣≡1 : ∀ {n} (i : Fin n) → ∣ ⁅ i ⁆ ∣ ≡ 1
 ∣⁅x⁆∣≡1 {suc n} zero    = cong suc (∣⊥∣≡0 n)
 ∣⁅x⁆∣≡1 {_}     (suc i) = ∣⁅x⁆∣≡1 i
+
+permute-⁅x⁆ : ∀ {n n'}{x : Fin n} (φ : Permutation n n') → permute φ ⁅ x ⁆ ≡ ⁅ φ ⟨$⟩ʳ x ⁆
+permute-⁅x⁆ {x = x} φ with ↔⇒≡ φ
+... | refl = extensionality (λ i →
+  begin
+    lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) ⁅ x ⁆)) ≡⟨ lookup∘tabulate _ i ⟩
+    lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆                             ≡⟨ lookup-lem i ⟩
+    lookup i ⁅ φ ⟨$⟩ʳ x ⁆                               ∎)
+  where
+    open P.≡-Reasoning
+
+    lookup-lem : ∀ i → lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆ ≡ lookup i ⁅ φ ⟨$⟩ʳ x ⁆
+    lookup-lem i with (φ ⟨$⟩ˡ i) Fin.≟ x
+    ... | yes refl = begin
+      lookup x ⁅ x ⁆                        ≡⟨ lookup∘update x _ inside ⟩
+      inside                                ≡⟨ P.sym (lookup∘update i _ inside) ⟩
+      lookup i ⁅ i ⁆                        ≡⟨ cong (lookup i ∘ ⁅_⁆) (P.sym (inverseʳ φ))  ⟩
+      lookup i ⁅ φ ⟨$⟩ʳ x ⁆                 ∎
+    ... | no ¬eq = begin
+      lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆               ≡⟨ lookup∘update′ ¬eq _ inside ⟩
+      lookup (φ ⟨$⟩ˡ i) (replicate outside) ≡⟨ lookup-replicate (φ ⟨$⟩ˡ i) _ ⟩
+      outside                               ≡⟨ P.sym (lookup-replicate i _) ⟩
+      lookup i (replicate outside)          ≡⟨ P.sym (lookup∘update′ (¬eq ∘ Inv.Inverse.to-from φ ∘ P.sym ) _ inside) ⟩
+      lookup i ⁅ φ ⟨$⟩ʳ x ⁆                 ∎
 
 ------------------------------------------------------------------------
 -- _⊆_
