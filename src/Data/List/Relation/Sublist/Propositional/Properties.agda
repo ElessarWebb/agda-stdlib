@@ -383,12 +383,14 @@ module Decidable
 -- A sublist
 
 module _ {a} {A : Set a} where
+  open import Relation.Unary.Indexed using (IPred)
+  open import Relation.Binary.Indexed.Homogeneous using (IRel)
 
   record Sublist (xs : List A) : Set a where
     constructor -⊆
     field
-      {reify}    : List A
-      isSublist  : reify ⊆ xs
+      {reify} : List A
+      le      : reify ⊆ xs
 
   open Sublist using (reify)
 
@@ -408,7 +410,10 @@ module _ {a} {A : Set a} where
   NonEmpty (-⊆ {ys} prf) = ∃ λ y → y ∈ ys
 
   Empty : ∀ {l} → Sublist l → Set a
-  Empty p = ¬ (NonEmpty p)
+  Empty (-⊆ {xs} _) = xs ≡ []
+
+  Every : ∀ {l} → Sublist l → Set a
+  Every {l} (-⊆ {xs} _) = xs ≡ l
 
   _∪_ : ∀ {l} → (xs ys : Sublist l) → Sublist l
   _∪_ {[]}    _              _            = -⊆ ([]⊆ [])
@@ -424,16 +429,32 @@ module _ {a} {A : Set a} where
   _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (keep q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
   _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
 
+  Lift : ∀ {p} → Pred (List A) p → IPred Sublist p
+  Lift P (-⊆ {xs} _) = P xs
+
+  Lift₂ : ∀ {p} → Rel (List A) p → IRel Sublist p
+  Lift₂ R (-⊆ {xs} _) (-⊆ {ys} _) = R xs ys
+
+  _⊑_ : IRel Sublist _
+  _⊑_ = Lift₂ _⊆_
+
+  p⊑p∪q : ∀ {l} {p : Sublist l} (q : Sublist l) → p ⊑ (p ∪ q)
+  p⊑p∪q {p = -⊆ base} _ = base
+  p⊑p∪q {p = -⊆ (skip le)} (-⊆ (skip le')) = p⊑p∪q (-⊆ le')
+  p⊑p∪q {p = -⊆ (skip le)} (-⊆ (keep le')) = skip (p⊑p∪q (-⊆ le'))
+  p⊑p∪q {p = -⊆ (keep le)} (-⊆ (skip le')) = keep (p⊑p∪q (-⊆ le'))
+  p⊑p∪q {p = -⊆ (keep le)} (-⊆ (keep le')) = keep (p⊑p∪q (-⊆ le'))
+
   ⊥-Empty : ∀ {l} → Empty (⊥ {l})
-  ⊥-Empty {l} (_ , ())
+  ⊥-Empty {l} = refl
 
   ⊥-unique : ∀ {l}{xs : Sublist l} → Empty xs → xs ≡ ⊥
   ⊥-unique {xs = -⊆ base} p = refl
-  ⊥-unique {xs = -⊆ (skip isSublist)} p with ⊥-unique {xs = -⊆ isSublist} p
+  ⊥-unique {xs = -⊆ (skip le)} p with ⊥-unique {xs = -⊆ le} p
   ... | refl = refl
-  ⊥-unique {xs = -⊆ {.(x ∷ _)} (keep {x} isSublist)} p = ⊥-elim (p (x , here refl))
+  ⊥-unique {xs = -⊆ (keep le)} ()
 
-  ⊤-unique : ∀ {l}(σ : Sublist l) → reify σ ≡ l → σ ≡ ⊤
+  ⊤-unique : ∀ {l}(σ : Sublist l) → Every σ → σ ≡ ⊤
   ⊤-unique (-⊆ base)                      refl = refl
   ⊤-unique (-⊆ {y ∷ ys} (skip isSublist)) refl = ⊥-elim (∷-⊈ isSublist)
   ⊤-unique (-⊆ {y ∷ ys} (keep isSublist)) p with ⊤-unique (-⊆ isSublist) (∷-injectiveʳ p)
