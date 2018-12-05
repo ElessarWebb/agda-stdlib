@@ -27,7 +27,7 @@ import Function.Bijection as Bij
 open import Function.Equivalence as Equiv using (_⇔_ ; equivalence)
 import Function.Injection as Inj
 
-open import Relation.Binary
+open import Relation.Binary hiding (NonEmpty)
 open import Relation.Binary.PropositionalEquality as Eq hiding ([_])
 open import Relation.Nullary
 import Relation.Nullary.Decidable as D
@@ -404,8 +404,11 @@ module _ {a} {A : Set a} where
   ⊥ : ∀ {l} → Sublist l
   ⊥ {l} = -⊆ ([]⊆ l) 
 
+  NonEmpty : ∀ {l} → Sublist l → Set a 
+  NonEmpty (-⊆ {ys} prf) = ∃ λ y → y ∈ ys
+
   Empty : ∀ {l} → Sublist l → Set a
-  Empty (-⊆ {ys} prf) = ∃ λ y → y ∈ ys
+  Empty p = ¬ (NonEmpty p)
 
   _∪_ : ∀ {l} → (xs ys : Sublist l) → Sublist l
   _∪_ {[]}    _              _            = -⊆ ([]⊆ [])
@@ -420,6 +423,15 @@ module _ {a} {A : Set a} where
   _∩_ {x ∷ l} (-⊆ (keep p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
   _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (keep q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
   _∩_ {x ∷ l} (-⊆ (skip p)) (-⊆ (skip q)) = skip⁺ x (-⊆ p ∩ -⊆ q)
+
+  ⊥-Empty : ∀ {l} → Empty (⊥ {l})
+  ⊥-Empty {l} (_ , ())
+
+  ⊥-unique : ∀ {l}{xs : Sublist l} → Empty xs → xs ≡ ⊥
+  ⊥-unique {xs = -⊆ base} p = refl
+  ⊥-unique {xs = -⊆ (skip isSublist)} p with ⊥-unique {xs = -⊆ isSublist} p
+  ... | refl = refl
+  ⊥-unique {xs = -⊆ {.(x ∷ _)} (keep {x} isSublist)} p = ⊥-elim (p (x , here refl))
 
   ⊤-unique : ∀ {l}(σ : Sublist l) → reify σ ≡ l → σ ≡ ⊤
   ⊤-unique (-⊆ base)                      refl = refl
