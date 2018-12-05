@@ -13,7 +13,7 @@ open import Data.Fin.Substitution
 open import Data.Nat hiding (_⊔_)
 open import Data.Fin using (Fin; zero; suc; lift)
 open import Data.Vec
-import Data.Vec.Properties as VecProp
+open import Data.Vec.Properties as VecProp using (extensionality)
 open import Function as Fun using (_∘_; _$_)
 open import Relation.Binary.PropositionalEquality as PropEq
   using (_≡_; refl; sym; cong; cong₂)
@@ -40,13 +40,6 @@ record Lemmas₀ {ℓ : Level} (T : Pred ℕ ℓ) : Set ℓ where
   field simple : Simple T
 
   open Simple simple
-
-  extensionality : ∀ {m n} {ρ₁ ρ₂ : Sub T m n} →
-                   (∀ x → lookup x ρ₁ ≡ lookup x ρ₂) → ρ₁ ≡ ρ₂
-  extensionality {ρ₁ = []}      {[]}       hyp = refl
-  extensionality {ρ₁ = t₁ ∷ ρ₁} { t₂ ∷ ρ₂} hyp with hyp zero
-  extensionality {ρ₁ = t₁ ∷ ρ₁} {.t₁ ∷ ρ₂} hyp | refl =
-    cong (_∷_ t₁) (extensionality (hyp ∘ suc))
 
   id-↑⋆ : ∀ {n} k → id ↑⋆ k ≡ id {k + n}
   id-↑⋆ zero    = refl

@@ -31,6 +31,14 @@ open import Relation.Nullary using (yes; no)
 ------------------------------------------------------------------------
 -- Properties of propositional equality over vectors
 
+module _ {a} {A : Set a} where
+
+ extensionality : ∀ {n} {xs ys : Vec A n} → (∀ i → lookup i xs ≡ lookup i ys) → xs ≡ ys
+ extensionality {xs = []}      {[]}       hyp = refl
+ extensionality {xs = x ∷ xs} { y ∷ ys} hyp with hyp zero
+ extensionality {xs = x ∷ xs} {.x ∷ ys} hyp | refl =
+   P.cong (_∷_ x) (extensionality (hyp ∘ suc))
+
 module _ {a} {A : Set a} {n} {x y : A} {xs ys : Vec A n} where
 
  ∷-injectiveˡ : x ∷ xs ≡ y ∷ ys → x ≡ y
