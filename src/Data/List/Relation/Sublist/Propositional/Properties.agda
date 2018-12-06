@@ -410,6 +410,9 @@ module _ {a} {A : Set a} where
   ⊥ : ∀ {l} → Sublist l
   ⊥ {l} = sub ([]⊆ l) 
 
+  only : ∀ {l x} → x ∈ l → Sublist l
+  only = sub ∘ from∈
+
   NonEmpty : ∀ {l} → Sublist l → Set a 
   NonEmpty (sub {ys} prf) = ∃ λ y → y ∈ ys
 
