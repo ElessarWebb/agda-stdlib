@@ -16,6 +16,7 @@ open import Data.List.Properties
 open import Data.List.Any using (here; there; satisfied)
 open import Data.List.Any.Properties using (here-injective; there-injective)
 open import Data.List.Membership.Propositional
+open import Data.List.Membership.Propositional.Properties
 open import Data.List.Relation.Sublist.Propositional
 open import Data.Maybe as Maybe using (nothing; just)
 open import Data.Maybe.All as MAll using (nothing; just)
@@ -249,6 +250,14 @@ module _ {a b} {A : Set a} {B : Set b} where
     | fx | _      | fx | _ | eq
     rewrite eq refl = keep (map⁻ inj p)
 
+  map-[]⊆ : ∀ {xs} (f : A → B) → map⁺ f ([]⊆ xs) ≡ ([]⊆ map f xs)
+  map-[]⊆ {[]}     f = refl
+  map-[]⊆ {x ∷ xs} f = Eq.cong skip (map-[]⊆ f)
+
+  map-from∈ : ∀ {x xs} (p : x ∈ xs) (f : A → B) → map⁺ f (from∈ p) ≡ from∈ (∈-map⁺ f p)
+  map-from∈ (here refl) f = Eq.cong keep (map-[]⊆ f)
+  map-from∈ (there p)   f = Eq.cong skip (map-from∈ p f)
+
 -- _++_
 
 module _ {a} {A : Set a} where
@@ -469,8 +478,8 @@ module _ {a} {A : Set a} where
   p⊑p∪q (keep? le) (skip? le') = keep (p⊑p∪q (sub le) (sub le'))
   p⊑p∪q (keep? le) (keep? le') = keep (p⊑p∪q (sub le) (sub le'))
 
-  q⊑p∪q : ∀ {l} {p : Sublist l} (q : Sublist l) → q ⊑ (p ∪ q)
-  q⊑p∪q {p = p} q rewrite ∪-comm p q = p⊑p∪q q p
+  q⊑p∪q : ∀ {l} (p : Sublist l) (q : Sublist l) → q ⊑ (p ∪ q)
+  q⊑p∪q p q rewrite ∪-comm p q = p⊑p∪q q p
 
   ⊥-Empty : ∀ {l} → Empty (⊥ {l})
   ⊥-Empty {l} = refl
@@ -487,8 +496,12 @@ module _ {a} {A : Set a} where
   ⊤-unique (keep? xs) p with ⊤-unique (sub xs) (∷-injectiveʳ p)
   ⊤-unique (keep? .(⊆-reflexive refl)) p | refl = refl
 
-module _ {a b} {A : Set a} {B : Set b} where
+module _ {a b} {A : Set a} {B : Set b} (f : A → B) where
+  open ≡-Reasoning
  
-  ⊆-map⁺ : ∀ {l}(f : A → B) → Sublist l → Sublist (map f l)
-  ⊆-map⁺ f (sub prf) = sub (map⁺ f prf)
+  ⊆-map⁺ : ∀ {l} → Sublist l → Sublist (map f l)
+  ⊆-map⁺ (sub prf) = sub (map⁺ f prf)
+
+  map-only : ∀ {l x} → (p : x ∈ l) → ⊆-map⁺ (only p) ≡ only (∈-map⁺ f p)
+  map-only p = cong sub (map-from∈ p f) 
 
