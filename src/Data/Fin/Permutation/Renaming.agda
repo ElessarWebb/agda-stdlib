@@ -126,3 +126,5 @@ module FromApp {ℓᵢ} {T₁ T₂ : ℕ → Set ℓᵢ} (app : AppLemmas T₁ T
     t ∎
 
   permute-cong      lemmas P.refl = P.refl
+
+  module Lemmas = PermuteLemmas lemmas
