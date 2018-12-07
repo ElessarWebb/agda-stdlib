@@ -9,6 +9,7 @@
 module Data.Fin.Substitution.Lemmas where
 
 import Category.Applicative.Indexed as Applicative
+import Function
 open import Data.Fin.Substitution
 open import Data.Nat hiding (_⊔_)
 open import Data.Fin using (Fin; zero; suc; lift)
