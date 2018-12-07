@@ -14,6 +14,7 @@ open import Data.Vec.Properties
 
 open import Relation.Binary.Indexed.Homogeneous using (IndexedSetoid; IsIndexedEquivalence)
 open import Relation.Binary.PropositionalEquality as P using (_≡_)
+open P.≡-Reasoning
 
 {- Permutable things -}
 record Permute {ℓ₁}(T : ℕ → Set ℓ₁) : Set ℓ₁ where
@@ -81,7 +82,7 @@ module Propositional {ℓᵢ} (T : ℕ → Set ℓᵢ) (app : Permute T) where
 
 -- We prove generically that a well-behaved substitution 
 -- yields well-behaved permutation application
-module FromApp {ℓᵢ} (T₁ T₂ : ℕ → Set ℓᵢ) (app : AppLemmas T₁ T₂) where
+module FromApp {ℓᵢ} {T₁ T₂ : ℕ → Set ℓᵢ} (app : AppLemmas T₁ T₂) where
   module App = AppLemmas app
   open App using (_/_; var; lemmas₄)
   module Lem₄ = Lemmas₄ lemmas₄
@@ -94,37 +95,34 @@ module FromApp {ℓᵢ} (T₁ T₂ : ℕ → Set ℓᵢ) (app : AppLemmas T₁ T
   permuteT = record { permute = λ ρ t → t / ⟦ ρ ⟧ }
 
   open Propositional T₁ permuteT
+  open PermuteLemmas
 
-  module _ (appLemmas : AppLemmas T₁ T₂) where
-    open PermuteLemmas
-    open P.≡-Reasoning
+  ⟦∘⟧ : ∀ {n m k} (ρ₁ : Permutation n m) (ρ₂ : Permutation m k) → ⟦ ρ₁ ⟧ ⊙ ⟦ ρ₂ ⟧ ≡ ⟦ ρ₁ ∘ₚ ρ₂ ⟧
+  ⟦∘⟧ ρ₁ ρ₂ = extensionality (λ i →
+      begin
+      lookup i (map (_⊘ ⟦ ρ₂ ⟧) ⟦ ρ₁ ⟧) ≡⟨ lookup-map i (_⊘ ⟦ ρ₂ ⟧) ⟦ ρ₁ ⟧ ⟩
+      lookup i ⟦ ρ₁ ⟧ ⊘ ⟦ ρ₂ ⟧ ≡⟨ P.cong (_⊘ _) (lookup∘tabulate _ i) ⟩
+      var (ρ₁ ⟨$⟩ʳ i) ⊘ ⟦ ρ₂ ⟧ ≡⟨ Lem₄.var-/ ⟩
+      lookup (ρ₁ ⟨$⟩ʳ i) ⟦ ρ₂ ⟧ ≡⟨ lookup∘tabulate _ (ρ₁ ⟨$⟩ʳ i) ⟩
+      var ((ρ₁ ∘ₚ ρ₂) ⟨$⟩ʳ i) ≡⟨ P.sym (lookup∘tabulate _ i) ⟩
+      lookup i ⟦ ρ₁ ∘ₚ ρ₂ ⟧ ∎)
 
-    ⟦∘⟧ : ∀ {n m k} (ρ₁ : Permutation n m) (ρ₂ : Permutation m k) → ⟦ ρ₁ ⟧ ⊙ ⟦ ρ₂ ⟧ ≡ ⟦ ρ₁ ∘ₚ ρ₂ ⟧
-    ⟦∘⟧ ρ₁ ρ₂ = extensionality (λ i →
-        begin
-        lookup i (map (_⊘ ⟦ ρ₂ ⟧) ⟦ ρ₁ ⟧) ≡⟨ lookup-map i (_⊘ ⟦ ρ₂ ⟧) ⟦ ρ₁ ⟧ ⟩
-        lookup i ⟦ ρ₁ ⟧ ⊘ ⟦ ρ₂ ⟧ ≡⟨ P.cong (_⊘ _) (lookup∘tabulate _ i) ⟩
-        var (ρ₁ ⟨$⟩ʳ i) ⊘ ⟦ ρ₂ ⟧ ≡⟨ Lem₄.var-/ ⟩
-        lookup (ρ₁ ⟨$⟩ʳ i) ⟦ ρ₂ ⟧ ≡⟨ lookup∘tabulate _ (ρ₁ ⟨$⟩ʳ i) ⟩
-        var ((ρ₁ ∘ₚ ρ₂) ⟨$⟩ʳ i) ≡⟨ P.sym (lookup∘tabulate _ i) ⟩
-        lookup i ⟦ ρ₁ ∘ₚ ρ₂ ⟧ ∎)
+  lemmas : PermuteLemmas
 
-    lemmas : PermuteLemmas
+  id-vanishes lemmas t =
+    let
+      ρ-eq = extensionality (λ i →
+        P.trans (lookup∘tabulate var i) (P.sym (App.lookup-id i)))
+    in P.trans (P.cong (t /_) ρ-eq) (App.id-vanishes t)
 
-    id-vanishes lemmas t =
-      let
-        ρ-eq = extensionality (λ i →
-          P.trans (lookup∘tabulate var i) (P.sym (App.lookup-id i)))
-      in P.trans (P.cong (t /_) ρ-eq) (App.id-vanishes t)
+  permute-∘ₚ  lemmas t ρ₁ ρ₂ =
+    P.trans (P.sym (App./-⊙ t)) (P.cong (t /_) (⟦∘⟧ ρ₁ ρ₂))
 
-    permute-∘ₚ  lemmas t ρ₁ ρ₂ =
-      P.trans (P.sym (App./-⊙ t)) (P.cong (t /_) (⟦∘⟧ ρ₁ ρ₂))
+  inverse-vanishes  lemmas t ρ = begin
+    t / ⟦ ρ ⟧ / ⟦ flip ρ ⟧ ≡⟨ permute-∘ₚ lemmas t ρ (flip ρ) ⟩
+    t / tabulate (var ∘ (ρ ∘ₚ flip ρ) ⟨$⟩ʳ_)
+      ≡⟨ P.cong (λ ρ → t / ρ) (tabulate-cong (λ x → P.cong var (inverseˡ ρ))) ⟩
+    t / tabulate (var ∘ id ⟨$⟩ʳ_) ≡⟨ id-vanishes lemmas t ⟩
+    t ∎
 
-    inverse-vanishes  lemmas t ρ = begin
-      t / ⟦ ρ ⟧ / ⟦ flip ρ ⟧ ≡⟨ permute-∘ₚ lemmas t ρ (flip ρ) ⟩
-      t / tabulate (var ∘ (ρ ∘ₚ flip ρ) ⟨$⟩ʳ_)
-        ≡⟨ P.cong (λ ρ → t / ρ) (tabulate-cong (λ x → P.cong var (inverseˡ ρ))) ⟩
-      t / tabulate (var ∘ id ⟨$⟩ʳ_) ≡⟨ id-vanishes lemmas t ⟩
-      t ∎
-
-    permute-cong      lemmas P.refl = P.refl
+  permute-cong      lemmas P.refl = P.refl

@@ -15,10 +15,10 @@ module _ where
   permute : ∀ {m n} → Renaming n m → Vec A n → Vec A m
   permute f xs = tabulate λ i → lookup (f ⟨$⟩ˡ i) xs
 
-  vecRename : Rename (Vec A)
-  vecRename = record { rename = permute }
+  vecPermute : Permute (Vec A)
+  vecPermute = record { permute = permute }
 
-  open Propositional (Vec A) vecRename
+  open Propositional (Vec A) vecPermute
 
   Permutation : ∀ {n} → Rel (Vec A n) ℓ
   Permutation = _≈_
@@ -26,7 +26,6 @@ module _ where
 {- Properties -}
 module _ {n m}(φ : Renaming n m) where
 
-  -- permuting a constant vector vanishes
   permute-replicate : ∀ {a : A} → permute φ (replicate a) ≡ replicate a
   permute-replicate {a} = tabulate-cong λ i → lookup-replicate (φ ⟨$⟩ˡ i) a
 
