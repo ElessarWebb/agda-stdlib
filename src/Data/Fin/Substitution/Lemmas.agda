@@ -10,19 +10,22 @@ module Data.Fin.Substitution.Lemmas where
 
 import Category.Applicative.Indexed as Applicative
 import Function
+open import Data.Empty
 open import Data.Fin.Substitution
 open import Data.Nat hiding (_⊔_)
-open import Data.Fin using (Fin; zero; suc; lift)
+open import Data.Fin as Fin using (Fin; zero; suc; lift; punchIn; punchOut)
+open import Data.Fin.Properties
 open import Data.Vec
 open import Data.Vec.Properties as VecProp using (extensionality)
 open import Function as Fun using (_∘_; _$_)
 open import Relation.Binary.PropositionalEquality as PropEq
-  using (_≡_; refl; sym; cong; cong₂)
+  using (_≡_; _≢_; refl; sym; cong; cong₂)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   using (Star; ε; _◅_; _▻_)
 open PropEq.≡-Reasoning
 open import Level using (Level; _⊔_)
 open import Relation.Unary using (Pred)
+open import Relation.Nullary
 
 -- A lemma which does not refer to any substitutions.
 
@@ -58,6 +61,22 @@ record Lemmas₀ {ℓ : Level} (T : Pred ℕ ℓ) : Set ℓ where
     weaken (lookup x (map weaken ρ ↑⋆ k))            ≡⟨ cong weaken (lookup-map-weaken-↑⋆ k x) ⟩
     weaken (lookup (lift k suc x) ((ρ ↑) ↑⋆ k))      ≡⟨ sym $ VecProp.lookup-map (lift k suc x) _ _ ⟩
     lookup (lift k suc x) (map weaken ((ρ ↑) ↑⋆ k))  ∎
+
+  t-for-x : ∀ {v}{t : T v} x → (t for x) x ≡ t
+  t-for-x x with x Fin.≟ x
+  ... | yes eq = refl
+  ... | no ¬eq = ⊥-elim (¬eq refl)
+
+  t-for-not-x : ∀ {v}{t : T v}{x y} → (¬eq : x ≢ y) → (t for x) y ≡ var (punchOut ¬eq)
+  t-for-not-x {x = x}{y} ¬eq with x Fin.≟ y
+  ... | yes eq = ⊥-elim (¬eq eq)
+  ... | no ¬eq' = cong var (punchOut-cong x refl)
+
+  {- substituting for a punched in' variable dissappears -}
+  for-punchIn : ∀ {v}{t : T v} x y → (t for x) (punchIn x y) ≡ var y
+  for-punchIn x y with x Fin.≟ (punchIn x y)
+  ... | yes eq = ⊥-elim (punchInᵢ≢i _ _ (sym eq))
+  ... | no ¬eq = cong var (PropEq.trans (punchOut-cong x refl) (punchOut-punchIn x))
 
 record Lemmas₁ {ℓ} (T : Pred ℕ ℓ) : Set ℓ where
   field lemmas₀ : Lemmas₀ T
@@ -197,6 +216,13 @@ record Lemmas₂ {ℓ} (T : Pred ℕ ℓ) : Set ℓ where
     var (lift j suc x) / wk ↑⋆ suc k ↑⋆ j           ≡⟨ cong₂ _/_ (sym (lookup-wk-↑⋆ j x)) refl ⟩
     lookup x (wk ↑⋆ j) / wk ↑⋆ suc k ↑⋆ j           ≡⟨ sym (lookup-⊙ x) ⟩
     lookup x (wk ↑⋆ j ⊙ wk ↑⋆ suc k ↑⋆ j)           ∎
+
+  sub-at-x : ∀ {n}(x : Fin (suc n)) t → (var x) / (sub t at x) ≡ t
+  sub-at-x x t = begin
+    (var x) / (sub t at x) ≡⟨ var-/ ⟩
+    lookup x (sub t at x)  ≡⟨ VecProp.lookup∘tabulate (t for x) x ⟩
+    (t for x) x            ≡⟨ t-for-x x ⟩
+    t ∎
 
   open Subst   subst   public hiding (simple; application)
   open Lemmas₁ lemmas₁ public

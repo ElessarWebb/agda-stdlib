@@ -15,8 +15,9 @@
 
 module Data.Fin.Substitution where
 
+open import Function using (_∘_)
 open import Data.Nat hiding (_⊔_)
-open import Data.Fin using (Fin; zero; suc)
+open import Data.Fin as Fin using (Fin; zero; suc; punchIn; punchOut)
 open import Data.Vec
 open import Function as Fun using (flip)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
@@ -24,6 +25,7 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
 open import Level using (Level; _⊔_)
 import Level as L
 open import Relation.Unary using (Pred)
+open import Relation.Nullary
 
 ------------------------------------------------------------------------
 -- General functionality
@@ -80,6 +82,17 @@ record Simple {ℓ : Level} (T : Pred ℕ ℓ) : Set ℓ where
 
   sub : ∀ {n} → T n → Sub T (suc n) n
   sub t = t ∷ id
+
+  wk-at : ∀ {n} → Fin (ℕ.suc n) → Sub T n (ℕ.suc n)
+  wk-at x = tabulate (var ∘ punchIn x)
+  
+  _for_ : ∀ {v} → T v → Fin (suc v) → Fin (suc v) → T v
+  (t for x) y with x Fin.≟ y
+  ... | yes eq = t
+  ... | no ¬eq = var (punchOut ¬eq)
+
+  sub_at_ : ∀ {n} → T n → Fin (ℕ.suc n) → Sub T (ℕ.suc n) n
+  sub t at x = tabulate (t for x)
 
 -- Application of substitutions.
 
