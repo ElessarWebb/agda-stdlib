@@ -13,11 +13,14 @@ import Function
 open import Data.Empty
 open import Data.Fin.Substitution
 open import Data.Nat hiding (_⊔_)
+open import Data.Nat.Properties
 open import Data.Fin as Fin using (Fin; zero; suc; lift; punchIn; punchOut)
 open import Data.Fin.Properties
 open import Data.Vec
 open import Data.Vec.Properties as VecProp using (extensionality)
 open import Function as Fun using (_∘_; _$_)
+open import Relation.Binary.HeterogeneousEquality as H
+  using (refl; _≅_) renaming (module ≅-Reasoning to HR)
 open import Relation.Binary.PropositionalEquality as PropEq
   using (_≡_; _≢_; refl; sym; cong; cong₂)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
@@ -217,12 +220,20 @@ record Lemmas₂ {ℓ} (T : Pred ℕ ℓ) : Set ℓ where
     lookup x (wk ↑⋆ j) / wk ↑⋆ suc k ↑⋆ j           ≡⟨ sym (lookup-⊙ x) ⟩
     lookup x (wk ↑⋆ j ⊙ wk ↑⋆ suc k ↑⋆ j)           ∎
 
-  sub-at-x : ∀ {n}(x : Fin (suc n)) t → (var x) / (sub t at x) ≡ t
-  sub-at-x x t = begin
+  sub-at-x : ∀ {n} (x : Fin (suc n)) {t} → (var x) / (sub t at x) ≡ t
+  sub-at-x x {t} = begin
     (var x) / (sub t at x) ≡⟨ var-/ ⟩
     lookup x (sub t at x)  ≡⟨ VecProp.lookup∘tabulate (t for x) x ⟩
     (t for x) x            ≡⟨ t-for-x x ⟩
     t ∎
+
+  sub-at-not-x : ∀ {n} {x y : Fin (suc n)} {t} → (neq : x ≢ y) → (var y) / (sub t at x) ≡ var (punchOut neq)
+  sub-at-not-x {x = x} {y} {t} neq = begin
+    (var y) / (sub t at x) ≡⟨ var-/ ⟩
+    lookup y (sub t at x)  ≡⟨ VecProp.lookup∘tabulate (t for x) y ⟩
+    (t for x) y            ≡⟨ t-for-not-x neq ⟩
+    (var (punchOut neq)) ∎
+
 
   open Subst   subst   public hiding (simple; application)
   open Lemmas₁ lemmas₁ public
@@ -348,6 +359,19 @@ record Lemmas₄ {ℓ} (T : Pred ℕ ℓ) : Set ℓ where
     ρ ⊙ (wk ⊙ sub t)      ≡⟨ cong (_⊙_ ρ) wk-⊙-sub ⟩
     ρ ⊙ id                ≡⟨ ⊙-id ⟩
     ρ                     ∎
+
+  wk⋆-+ : ∀ {n} i j → wk⋆ i {n} ⊙ wk⋆ j ≅ wk⋆ (j + i)
+  wk⋆-+ i zero = H.≡-to-≅ ⊙-id
+  wk⋆-+ {n} i (suc j) =
+    HR.begin
+      wk⋆ i ⊙ wk⋆ (suc j)   HR.≡⟨ cong (λ ρ → _ ⊙ ρ) map-weaken ⟩
+      wk⋆ i ⊙ (wk⋆ j ⊙ wk)  HR.≡⟨ ⊙-assoc ⟩
+      (wk⋆ i ⊙ wk⋆ j) ⊙ wk  HR.≅⟨ H.icong (λ x → Sub T n x) (sym $ +-assoc j i n) (_⊙ wk) (wk⋆-+ i j) ⟩
+      wk⋆ (j + i)   ⊙ wk    HR.≡⟨ sym map-weaken ⟩
+      wk⋆ (suc (j + i))     HR.∎
+
+  wk⋆-suc : ∀ {n} i → wk⋆ (suc i) {n} ≡ wk⋆ i ⊙ wk
+  wk⋆-suc i = sym (H.≅-to-≡ (wk⋆-+ i 1))
 
   sub-⊙ : ∀ {m n} {ρ : Sub T m n} t → sub t ⊙ ρ ≡ ρ ↑ ⊙ sub (t / ρ)
   sub-⊙ {ρ = ρ} t = begin
