@@ -131,33 +131,33 @@ module _ {a} {A : Set a} where
   q⊑p∪q : ∀ {l} (p q : Sublist l) → q ⊑ (p ∪ q)
   q⊑p∪q p q rewrite ∪-comm p q = p⊑p∪q q p
 
-  x∈p∪q⁺ : ∀ {l x} (p q : Sublist l) → x ∈ₛ p ∪ q → x ∈ₛ p ⊎ x ∈ₛ q
-  x∈p∪q⁺ base? base? ()
-  x∈p∪q⁺ {x ∷ xs} (skip? p) (skip? q) prf = x∈p∪q⁺ (sub p) (sub q) prf
-  x∈p∪q⁺ {x ∷ xs} (skip? _) (keep? _) (here px) = inj₂ (here px)
-  x∈p∪q⁺ {x ∷ xs} (skip? p) (keep? q) (there prf) =
-    Sum.map id there (x∈p∪q⁺ {xs} (sub p) (sub q) prf)
-  x∈p∪q⁺ {x ∷ xs} (keep? le) (skip? le₁) (here px) = inj₁ (here px)
-  x∈p∪q⁺ {x ∷ xs} (keep? le) (keep? le₁) (here px) = inj₁ (here px)
-  x∈p∪q⁺ {x ∷ xs} (keep? p) (skip? q) (there prf) =
-    Sum.map there id (x∈p∪q⁺ {xs} (sub p) (sub q) prf)
-  x∈p∪q⁺ {x ∷ xs} (keep? p) (keep? q) (there prf) =
-    Sum.map there there (x∈p∪q⁺ {xs} (sub p) (sub q) prf)
+  x∈p∪q⁻ : ∀ {l x} (p q : Sublist l) → x ∈ₛ p ∪ q → x ∈ₛ p ⊎ x ∈ₛ q
+  x∈p∪q⁻ base? base? ()
+  x∈p∪q⁻ {x ∷ xs} (skip? p) (skip? q) prf = x∈p∪q⁻ (sub p) (sub q) prf
+  x∈p∪q⁻ {x ∷ xs} (skip? _) (keep? _) (here px) = inj₂ (here px)
+  x∈p∪q⁻ {x ∷ xs} (skip? p) (keep? q) (there prf) =
+    Sum.map id there (x∈p∪q⁻ {xs} (sub p) (sub q) prf)
+  x∈p∪q⁻ {x ∷ xs} (keep? le) (skip? le₁) (here px) = inj₁ (here px)
+  x∈p∪q⁻ {x ∷ xs} (keep? le) (keep? le₁) (here px) = inj₁ (here px)
+  x∈p∪q⁻ {x ∷ xs} (keep? p) (skip? q) (there prf) =
+    Sum.map there id (x∈p∪q⁻ {xs} (sub p) (sub q) prf)
+  x∈p∪q⁻ {x ∷ xs} (keep? p) (keep? q) (there prf) =
+    Sum.map there there (x∈p∪q⁻ {xs} (sub p) (sub q) prf)
 
-  x∈p∪q⁻ : ∀ {l x} (p q : Sublist l) → x ∈ₛ p ⊎ x ∈ₛ q → x ∈ₛ p ∪ q
-  x∈p∪q⁻ base? base? (inj₁ ())
-  x∈p∪q⁻ base? base? (inj₂ ())
-  x∈p∪q⁻ (skip? p) (skip? q) i                  = x∈p∪q⁻ (sub p) (sub q) i
-  x∈p∪q⁻ (skip? p) (keep? q) (inj₁ x)           = there (x∈p∪q⁻ (sub p) (sub q) (inj₁ x))
-  x∈p∪q⁻ (skip? p) (keep? q) (inj₂ (here refl)) = here refl
-  x∈p∪q⁻ (skip? p) (keep? q) (inj₂ (there y))   = there (x∈p∪q⁻ (sub p) (sub q) (inj₂ y))
-  x∈p∪q⁻ (keep? p) (skip? q) (inj₁ (here refl)) = here refl
-  x∈p∪q⁻ (keep? p) (skip? q) (inj₁ (there x))   = there (x∈p∪q⁻ (sub p) (sub q) (inj₁ x))
-  x∈p∪q⁻ (keep? p) (skip? q) (inj₂ y)           = there (x∈p∪q⁻ (sub p) (sub q) (inj₂ y))
-  x∈p∪q⁻ (keep? p) (keep? q) (inj₁ (here refl)) = here refl
-  x∈p∪q⁻ (keep? p) (keep? q) (inj₁ (there y))   = there (x∈p∪q⁻ (sub p) (sub q) (inj₁ y))
-  x∈p∪q⁻ (keep? p) (keep? q) (inj₂ (here refl)) = here refl
-  x∈p∪q⁻ (keep? p) (keep? q) (inj₂ (there y))   = there (x∈p∪q⁻ (sub p) (sub q) (inj₂ y))
+  x∈p∪q⁺ : ∀ {l x} (p q : Sublist l) → x ∈ₛ p ⊎ x ∈ₛ q → x ∈ₛ p ∪ q
+  x∈p∪q⁺ base? base? (inj₁ ())
+  x∈p∪q⁺ base? base? (inj₂ ())
+  x∈p∪q⁺ (skip? p) (skip? q) i                  = x∈p∪q⁺ (sub p) (sub q) i
+  x∈p∪q⁺ (skip? p) (keep? q) (inj₁ x)           = there (x∈p∪q⁺ (sub p) (sub q) (inj₁ x))
+  x∈p∪q⁺ (skip? p) (keep? q) (inj₂ (here refl)) = here refl
+  x∈p∪q⁺ (skip? p) (keep? q) (inj₂ (there y))   = there (x∈p∪q⁺ (sub p) (sub q) (inj₂ y))
+  x∈p∪q⁺ (keep? p) (skip? q) (inj₁ (here refl)) = here refl
+  x∈p∪q⁺ (keep? p) (skip? q) (inj₁ (there x))   = there (x∈p∪q⁺ (sub p) (sub q) (inj₁ x))
+  x∈p∪q⁺ (keep? p) (skip? q) (inj₂ y)           = there (x∈p∪q⁺ (sub p) (sub q) (inj₂ y))
+  x∈p∪q⁺ (keep? p) (keep? q) (inj₁ (here refl)) = here refl
+  x∈p∪q⁺ (keep? p) (keep? q) (inj₁ (there y))   = there (x∈p∪q⁺ (sub p) (sub q) (inj₁ y))
+  x∈p∪q⁺ (keep? p) (keep? q) (inj₂ (here refl)) = here refl
+  x∈p∪q⁺ (keep? p) (keep? q) (inj₂ (there y))   = there (x∈p∪q⁺ (sub p) (sub q) (inj₂ y))
 
   ⊥-Empty : ∀ {l} → Empty (⊥ {l})
   ⊥-Empty {l} = refl
