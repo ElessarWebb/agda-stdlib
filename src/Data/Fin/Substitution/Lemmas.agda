@@ -107,6 +107,10 @@ record Lemmas₁ {ℓ} (T : Pred ℕ ℓ) : Set ℓ where
     lookup-wk : ∀ {n} (x : Fin n) → lookup x wk ≡ var (suc x)
     lookup-wk x = lookup-map-weaken x (lookup-id x)
 
+  lookup-wk⋆ : ∀ {n} (x : Fin n) k → lookup x (wk⋆ k) ≡ var (Fin.raise k x)
+  lookup-wk⋆ x zero = lookup-id x
+  lookup-wk⋆ x (suc k) = lookup-map-weaken x (lookup-wk⋆ x k)
+
   lookup-↑⋆ : ∀ {m n} (f : Fin m → Fin n) {ρ : Sub T m n} →
               (∀ x → lookup x ρ ≡ var (f x)) →
               ∀ k x → lookup x (ρ ↑⋆ k) ≡ var (lift k f x)

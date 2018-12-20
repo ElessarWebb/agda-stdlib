@@ -95,6 +95,10 @@ toℕ-raise : ∀ {m} n (i : Fin m) → toℕ (raise n i) ≡ n ℕ+ toℕ i
 toℕ-raise zero    i = refl
 toℕ-raise (suc n) i = cong suc (toℕ-raise n i)
 
+raise-injective : ∀ {n m} {i j : Fin n} → raise m i ≡ raise m j → i ≡ j
+raise-injective {m = zero}  = id
+raise-injective {m = suc m} = raise-injective ∘ suc-injective
+
 toℕ<n : ∀ {n} (i : Fin n) → toℕ i ℕ< n
 toℕ<n zero    = s≤s z≤n
 toℕ<n (suc i) = s≤s (toℕ<n i)

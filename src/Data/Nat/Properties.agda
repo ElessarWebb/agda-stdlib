@@ -450,6 +450,10 @@ _>″?_ = flip _<″?_
 
 -- Other properties of _+_ and _≡_
 
++-injectiveʳ : ∀ n m k → n + m ≡ n + k → m ≡ k
++-injectiveʳ zero m k eq = eq
++-injectiveʳ (suc n) m k eq = +-injectiveʳ n m k (suc-injective eq)
+
 +-cancelˡ-≡ : LeftCancellative _≡_ _+_
 +-cancelˡ-≡ zero    eq = eq
 +-cancelˡ-≡ (suc m) eq = +-cancelˡ-≡ m (cong pred eq)

@@ -174,6 +174,10 @@ module _ {a} {A : Set a} where
   ⊤-unique (keep? xs) p with ⊤-unique (sub xs) (∷-injectiveʳ p)
   ⊤-unique (keep? .(⊆-reflexive refl)) p | refl = refl
 
+  x∈only : ∀ {l x y} (i : x ∈ l) → y ∈ₛ only i → x ≡ y
+  x∈only i (here refl) = refl
+  x∈only i (there ())
+
 module _ {a b} {A : Set a} {B : Set b} (f : A → B) where
   open ≡-Reasoning
  
