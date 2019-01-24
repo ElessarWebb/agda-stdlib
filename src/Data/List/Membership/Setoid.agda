@@ -16,7 +16,7 @@ open import Data.List.Base as List using (List; []; _∷_; length; lookup)
 open import Data.List.Any as Any using (Any; index; map; here; there)
 open import Data.Product as Prod using (∃; _×_; _,_)
 open import Relation.Unary using (Pred)
-open import Relation.Nullary using (¬_)
+open import Relation.Nullary using (¬_; Dec; yes; no)
 
 open Setoid S renaming (Carrier to A)
 
@@ -38,6 +38,16 @@ mapWith∈ : ∀ {b} {B : Set b}
            (xs : List A) → (∀ {x} → x ∈ xs → B) → List B
 mapWith∈ []       f = []
 mapWith∈ (x ∷ xs) f = f (here refl) ∷ mapWith∈ xs (f ∘ there)
+
+collectWith∈ : ∀ {p} {P : Pred A p} xs → (∀ {x} → x ∈ xs → Dec (P x)) → List (∃ P)
+collectWith∈ [] f = []
+collectWith∈ (x ∷ xs) f with f (here refl)
+... | yes p = (x , p) ∷ collectWith∈ xs (f ∘ there)
+... | no ¬p = collectWith∈ xs (f ∘ there)
+
+foldrWith∈ : ∀ {b} {B : Set b} (xs : List A) → (∀ {x} → x ∈ xs → B → B) → B → B
+foldrWith∈ [] f b = b
+foldrWith∈ (x ∷ xs) f b = f (here refl) (foldrWith∈ xs (f ∘ there) b)
 
 _∷=_ : ∀ {xs x} → x ∈ xs → A → List A
 _∷=_ {xs} x∈xs v = xs List.[ index x∈xs ]∷= v
