@@ -376,6 +376,38 @@ module _ {a} {A : Set a} where
   ++⁻¹ ps = equivalence (++⁺ ⊆-refl) (++⁻ ps)
 
 ------------------------------------------------------------------------
+-- Transport over permutations
+
+module _ {a} {A : Set a} where
+  open import Data.List.Relation.BagAndSetEquality
+  open import Data.List.Relation.Permutation.Inductive
+  open import Data.List.Relation.BagAndSetEquality
+  open import Data.List.Relation.Permutation.Inductive.Properties
+
+  permute⁺ : ∀ {xs ys xs' : List A} → xs ↭ ys → xs' ⊆ xs → ∃ λ ys' → ys' ⊆ ys × xs' ↭ ys'
+  permute⁺ {xs} {.xs} refl le = -, le , refl 
+  permute⁺ (prep x p) (skip le) =
+    let ys' , le' , t = permute⁺ p le in ys' , skip le' , t
+  permute⁺ (prep x p) (keep le) =
+    let ys' , le' , t = permute⁺ p le in x ∷ ys' , keep le' , prep x t
+  permute⁺ (_↭_.swap x y p) (skip (skip le)) =
+    let zs , le , q = permute⁺ p le in zs , skip (skip le) , q
+  permute⁺ (_↭_.swap x y p) (skip (keep le)) =
+    let zs , le , q = permute⁺ p le in y ∷ zs , keep (skip le) , prep y q
+  permute⁺ (_↭_.swap x y p) (keep (skip le)) =
+    let zs , le , q = permute⁺ p le in x ∷ zs , skip (keep le) , prep x q
+  permute⁺ (_↭_.swap x y p) (keep (keep le)) =
+    let zs , le , q = permute⁺ p le in y ∷ x ∷ zs , keep (keep le) , _↭_.swap x y q
+  permute⁺ {xs} {ys} (_↭_.trans p q) le =
+    let
+      _  , le₁ , ↭₁ = permute⁺ p le
+      zs , le₂ , ↭₂ = permute⁺ q le₁
+    in zs , le₂ , _↭_.trans ↭₁ ↭₂
+
+  bag⁺ : ∀ {xs ys xs' : List A} → xs ∼[ bag ] ys → xs' ⊆ xs → ∃ λ ys' → ys' ⊆ ys × xs' ∼[ bag ] ys'
+  bag⁺ f le₁ = let zs , le₂ , p = permute⁺ (~bag⇒↭ f) le₁ in zs , le₂ , ↭⇒~bag p
+
+------------------------------------------------------------------------
 -- Decidability of the order
 
 module Decidable
