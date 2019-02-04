@@ -187,3 +187,11 @@ module _ {a b} {A : Set a} {B : Set b} (f : A → B) where
   map-only : ∀ {l x} → (p : x ∈ l) → ⊆-map⁺ (only p) ≡ only (∈-map⁺ f p)
   map-only p = cong sub (map-from∈ p f) 
 
+module _ {a} {A : Set a} where
+
+  open import Function.Equality
+  open import Function.Inverse
+  open import Data.List.Relation.BagAndSetEquality
+
+  coerce : ∀ {xs ys : List A} → xs ∼[ bag ] ys → Sublist xs → Sublist ys
+  coerce f (sub le) = sub (proj₁ (proj₂ (bag⁺ f le))) 
