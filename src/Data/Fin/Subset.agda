@@ -71,6 +71,7 @@ p ⊈ q = ¬ (p ⊆ q)
 
 infixr 7 _∩_
 infixr 6 _∪_
+infixr 7 _─_
 
 -- Complement
 ∁ : ∀ {n} → Op₁ (Subset n)
@@ -83,6 +84,10 @@ p ∩ q = zipWith _∧_ p q
 -- Intersection
 _∪_ : ∀ {n} → Op₂ (Subset n)
 p ∪ q = zipWith _∨_ p q
+
+-- Subtraction
+_─_ : ∀ {n} → Op₂ (Subset n)
+p ─ q = p ∩ (∁ q)
 
 -- N-ary union
 ⋃ : ∀ {n} → List (Subset n) → Subset n
