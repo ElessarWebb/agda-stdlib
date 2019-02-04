@@ -16,7 +16,7 @@ open import Data.List.Any.Properties using (here-injective; there-injective)
 open import Data.List.Membership.Propositional as Mem
 open import Data.List.Membership.Propositional.Properties
 open import Data.List.Relation.Sublist.Propositional
-open import Data.List.Relation.Sublist.Propositional.Properties
+open import Data.List.Relation.Sublist.Propositional.Properties as SP hiding (bag⁺)
 open import Data.Maybe as Maybe using (nothing; just)
 open import Data.Maybe.All as MAll using (nothing; just)
 open import Data.Nat.Base
@@ -189,9 +189,7 @@ module _ {a b} {A : Set a} {B : Set b} (f : A → B) where
 
 module _ {a} {A : Set a} where
 
-  open import Function.Equality
-  open import Function.Inverse
   open import Data.List.Relation.BagAndSetEquality
 
-  coerce : ∀ {xs ys : List A} → xs ∼[ bag ] ys → Sublist xs → Sublist ys
-  coerce f (sub le) = sub (proj₁ (proj₂ (bag⁺ f le))) 
+  bag⁺ : ∀ {xs ys : List A} → xs ∼[ bag ] ys → Sublist xs → Sublist ys
+  bag⁺ f (sub le) = sub (proj₁ (proj₂ (SP.bag⁺ f le))) 
