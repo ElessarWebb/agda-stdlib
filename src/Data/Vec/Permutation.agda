@@ -62,3 +62,9 @@ module _ {a}{A : Set a}{n m}(φ : Renaming n m) where
     lookup (φ ⟨$⟩ʳ i) (permute φ xs) ≡⟨ lookup∘tabulate (λ j → lookup (φ ⟨$⟩ˡ j) xs) _ ⟩
     lookup (φ ⟨$⟩ˡ (φ ⟨$⟩ʳ i)) xs    ≡⟨ cong (λ j → lookup j xs) (inverseˡ φ) ⟩
     lookup i xs ∎
+
+  []=-permute⁺ : ∀ {x : A} {i xs} → xs [ i ]= x → permute φ xs [ φ ⟨$⟩ʳ i ]= x
+  []=-permute⁺ {x} {i} {xs} e = lookup⇒[]= _ _ (trans (lookup-permute _ _) ([]=⇒lookup e))
+  
+  []=-permute⁻ : ∀ {x : A} {i xs} → permute φ xs [ φ ⟨$⟩ʳ i ]= x → xs [ i ]= x
+  []=-permute⁻ {x} {i} {xs} e = lookup⇒[]= _ _ (trans (sym (lookup-permute _ _)) ([]=⇒lookup e))
