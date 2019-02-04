@@ -15,6 +15,7 @@ import Algebra.Properties.Lattice as L
 import Algebra.Properties.DistributiveLattice as DL
 import Algebra.Properties.BooleanAlgebra as BA
 import Function.Inverse as Inv
+open import Data.Bool
 open import Data.Bool.Properties
 open import Data.Fin as Fin using (Fin; suc; zero)
 open import Data.Fin.Subset
@@ -35,6 +36,7 @@ open import Relation.Binary.PropositionalEquality as P
 open import Relation.Nullary.Negation using (contradiction)
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Unary using (Pred; Decidable)
+open P.≡-Reasoning
 
 ------------------------------------------------------------------------
 -- Constructor mangling
@@ -128,29 +130,60 @@ x∈⁅y⁆⇔x≡y {_} {x} {y} = equivalence
 ∣⁅x⁆∣≡1 {suc n} zero    = cong suc (∣⊥∣≡0 n)
 ∣⁅x⁆∣≡1 {_}     (suc i) = ∣⁅x⁆∣≡1 i
 
-permute-⁅x⁆ : ∀ {n n'}{x : Fin n} (φ : Permutation n n') → permute φ ⁅ x ⁆ ≡ ⁅ φ ⟨$⟩ʳ x ⁆
-permute-⁅x⁆ {x = x} φ with ↔⇒≡ φ
-... | refl = extensionality (λ i →
-  begin
-    lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) ⁅ x ⁆)) ≡⟨ lookup∘tabulate _ i ⟩
-    lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆                             ≡⟨ lookup-lem i ⟩
-    lookup i ⁅ φ ⟨$⟩ʳ x ⁆                               ∎)
-  where
-    open P.≡-Reasoning
+module _ {n n'} (φ : Permutation n n') where
 
-    lookup-lem : ∀ i → lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆ ≡ lookup i ⁅ φ ⟨$⟩ʳ x ⁆
-    lookup-lem i with (φ ⟨$⟩ˡ i) Fin.≟ x
-    ... | yes refl = begin
-      lookup x ⁅ x ⁆                        ≡⟨ lookup∘update x _ inside ⟩
-      inside                                ≡⟨ P.sym (lookup∘update i _ inside) ⟩
-      lookup i ⁅ i ⁆                        ≡⟨ cong (lookup i ∘ ⁅_⁆) (P.sym (inverseʳ φ))  ⟩
-      lookup i ⁅ φ ⟨$⟩ʳ x ⁆                 ∎
-    ... | no ¬eq = begin
-      lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆               ≡⟨ lookup∘update′ ¬eq _ inside ⟩
-      lookup (φ ⟨$⟩ˡ i) (replicate outside) ≡⟨ lookup-replicate (φ ⟨$⟩ˡ i) _ ⟩
-      outside                               ≡⟨ P.sym (lookup-replicate i _) ⟩
-      lookup i (replicate outside)          ≡⟨ P.sym (lookup∘update′ (¬eq ∘ Inv.Inverse.to-from φ ∘ P.sym ) _ inside) ⟩
-      lookup i ⁅ φ ⟨$⟩ʳ x ⁆                 ∎
+  permute-∁⁺ : ∀ p → permute φ (∁ p) ≡ ∁ (permute φ p)
+  permute-∁⁺ p = extensionality (λ i → begin
+    lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) (map not p)))
+      ≡⟨ lookup∘tabulate (λ j → lookup (φ ⟨$⟩ˡ j) (map not p)) _ ⟩
+    lookup (φ ⟨$⟩ˡ i) (map not p)
+      ≡⟨ lookup-map (φ ⟨$⟩ˡ i) not p ⟩
+    not (lookup (φ ⟨$⟩ˡ i) p)
+      ≡⟨ cong not (P.sym (lookup∘tabulate (λ j → lookup (φ ⟨$⟩ˡ j) p) _)) ⟩
+    not (lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) p)))
+      ≡⟨ P.sym (lookup-map i not (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) p))) ⟩
+    lookup i (map not (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) p))) ∎)
+
+  permute-∩⁺ : ∀ p q → permute φ (p ∩ q) ≡ (permute φ p) ∩ (permute φ q)
+  permute-∩⁺ p q = extensionality (λ i → begin
+    lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) (p ∩ q)))
+      ≡⟨ lookup∘tabulate _ i ⟩
+    lookup (φ ⟨$⟩ˡ i) (p ∩ q)
+      ≡⟨ lookup-zipWith _∧_ (φ ⟨$⟩ˡ i) p q ⟩
+    lookup (φ ⟨$⟩ˡ i) p ∧ lookup (φ ⟨$⟩ˡ i) q
+      ≡⟨ P.sym (cong₂ _∧_ (lookup∘tabulate _ i) (lookup∘tabulate _ i)) ⟩
+    lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) p)) ∧ lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) q))
+      ≡⟨ P.sym (lookup-zipWith _∧_ i _ _) ⟩
+    lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) p) ∩ tabulate (λ j → lookup (φ ⟨$⟩ˡ j) q)) ∎)
+
+  permute-─⁺ : ∀ p q → permute φ (p ─ q) ≡ (permute φ p) ─ (permute φ q)
+  permute-─⁺ p q = begin
+    permute φ (p ∩ (∁ q))           ≡⟨ permute-∩⁺ p (∁ q) ⟩
+    permute φ p ∩ permute φ (∁ q)   ≡⟨ cong (_ ∩_) (permute-∁⁺ q) ⟩
+    permute φ p ∩ (∁ (permute φ q)) ∎
+
+  permute-⁅x⁆⁺ : ∀ {x : Fin n} → permute φ ⁅ x ⁆ ≡ ⁅ φ ⟨$⟩ʳ x ⁆
+  permute-⁅x⁆⁺ {x = x} = extensionality (λ i →
+    begin
+      lookup i (tabulate (λ j → lookup (φ ⟨$⟩ˡ j) ⁅ x ⁆)) ≡⟨ lookup∘tabulate _ i ⟩
+      lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆                             ≡⟨ lookup-lem i ⟩
+      lookup i ⁅ φ ⟨$⟩ʳ x ⁆                               ∎)
+    where
+      open P.≡-Reasoning
+
+      lookup-lem : ∀ i → lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆ ≡ lookup i ⁅ φ ⟨$⟩ʳ x ⁆
+      lookup-lem i with (φ ⟨$⟩ˡ i) Fin.≟ x
+      ... | yes refl = begin
+        lookup x ⁅ x ⁆                        ≡⟨ lookup∘update x _ inside ⟩
+        inside                                ≡⟨ P.sym (lookup∘update i _ inside) ⟩
+        lookup i ⁅ i ⁆                        ≡⟨ cong (lookup i ∘ ⁅_⁆) (P.sym (inverseʳ φ))  ⟩
+        lookup i ⁅ φ ⟨$⟩ʳ x ⁆                 ∎
+      ... | no ¬eq = begin
+        lookup (φ ⟨$⟩ˡ i) ⁅ x ⁆               ≡⟨ lookup∘update′ ¬eq _ inside ⟩
+        lookup (φ ⟨$⟩ˡ i) (replicate outside) ≡⟨ lookup-replicate (φ ⟨$⟩ˡ i) _ ⟩
+        outside                               ≡⟨ P.sym (lookup-replicate i _) ⟩
+        lookup i (replicate outside)          ≡⟨ P.sym (lookup∘update′ (¬eq ∘ Inv.Inverse.to-from φ ∘ P.sym ) _ inside) ⟩
+        lookup i ⁅ φ ⟨$⟩ʳ x ⁆                 ∎
 
 ------------------------------------------------------------------------
 -- _⊆_
