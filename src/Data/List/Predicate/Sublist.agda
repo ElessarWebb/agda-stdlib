@@ -107,16 +107,6 @@ module _ {a} {A : Set a} where
   _∈ₛ_ : ∀ {l} x (xs : Sublist l) → Set a
   _∈ₛ_ x = Lift (x ∈_)
 
-  ∪-zeroˡ : ∀ {l} (xs : Sublist l) → ⊤ ∪ xs ≡ ⊤
-  ∪-zeroˡ base? = refl
-  ∪-zeroˡ (skip? le) = cong keep! (∪-zeroˡ (sub le))
-  ∪-zeroˡ (keep? le) = cong keep! (∪-zeroˡ (sub le))
-
-  ∪-zeroʳ : ∀ {l} (xs : Sublist l) → xs ∪ ⊤ ≡ ⊤
-  ∪-zeroʳ base? = refl
-  ∪-zeroʳ (skip? le) = cong keep! (∪-zeroʳ (sub le))
-  ∪-zeroʳ (keep? le) = cong keep! (∪-zeroʳ (sub le))
-
   ∪-comm : ∀ {l} (xs ys : Sublist l) → xs ∪ ys ≡ ys ∪ xs
   ∪-comm (sub base) (sub base) = refl
   ∪-comm (skip? le) (skip? le') = cong skip! (∪-comm (sub le) (sub le'))
@@ -130,6 +120,22 @@ module _ {a} {A : Set a} where
   ∩-comm (skip? le) (keep? le') = cong skip! (∩-comm (sub le) (sub le'))
   ∩-comm (keep? le) (skip? le') = cong skip! (∩-comm (sub le) (sub le'))
   ∩-comm (keep? le) (keep? le') = cong keep! (∩-comm (sub le) (sub le'))
+
+  ∪-zeroˡ : ∀ {l} (xs : Sublist l) → ⊤ ∪ xs ≡ ⊤
+  ∪-zeroˡ base? = refl
+  ∪-zeroˡ (skip? le) = cong keep! (∪-zeroˡ (sub le))
+  ∪-zeroˡ (keep? le) = cong keep! (∪-zeroˡ (sub le))
+
+  ∪-zeroʳ : ∀ {l} (xs : Sublist l) → xs ∪ ⊤ ≡ ⊤
+  ∪-zeroʳ xs = trans (∪-comm xs ⊤) (∪-zeroˡ xs)
+
+  ∩-zeroˡ : ∀ {l} (xs : Sublist l) → ⊥ ∩ xs ≡ ⊥
+  ∩-zeroˡ base? = refl
+  ∩-zeroˡ (skip? le) = cong skip! (∩-zeroˡ (sub le))
+  ∩-zeroˡ (keep? le) = cong skip! (∩-zeroˡ (sub le))
+
+  ∩-zeroʳ : ∀ {l} (xs : Sublist l) → xs ∩ ⊥ ≡ ⊥
+  ∩-zeroʳ xs = trans (∩-comm xs ⊥) (∩-zeroˡ xs)
 
   p⊑p∪q : ∀ {l} (p : Sublist l) (q : Sublist l) → p ⊑ (p ∪ q)
   p⊑p∪q base?      base? = base
@@ -171,6 +177,9 @@ module _ {a} {A : Set a} where
 
   ⊥-Empty : ∀ {l} → Empty (⊥ {l})
   ⊥-Empty {l} = refl
+
+  ⊥⇒Empty : ∀ {l} {xs : Sublist l} → xs ≡ ⊥ → Empty xs
+  ⊥⇒Empty {l} refl = ⊥-Empty {l}
 
   ⊥-unique : ∀ {l}{xs : Sublist l} → Empty xs → xs ≡ ⊥
   ⊥-unique {xs = base?} p = refl
