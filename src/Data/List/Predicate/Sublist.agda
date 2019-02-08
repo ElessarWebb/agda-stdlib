@@ -107,6 +107,16 @@ module _ {a} {A : Set a} where
   _∈ₛ_ : ∀ {l} x (xs : Sublist l) → Set a
   _∈ₛ_ x = Lift (x ∈_)
 
+  ∪-zeroˡ : ∀ {l} (xs : Sublist l) → ⊤ ∪ xs ≡ ⊤
+  ∪-zeroˡ base? = refl
+  ∪-zeroˡ (skip? le) = cong keep! (∪-zeroˡ (sub le))
+  ∪-zeroˡ (keep? le) = cong keep! (∪-zeroˡ (sub le))
+
+  ∪-zeroʳ : ∀ {l} (xs : Sublist l) → xs ∪ ⊤ ≡ ⊤
+  ∪-zeroʳ base? = refl
+  ∪-zeroʳ (skip? le) = cong keep! (∪-zeroʳ (sub le))
+  ∪-zeroʳ (keep? le) = cong keep! (∪-zeroʳ (sub le))
+
   ∪-comm : ∀ {l} (xs ys : Sublist l) → xs ∪ ys ≡ ys ∪ xs
   ∪-comm (sub base) (sub base) = refl
   ∪-comm (skip? le) (skip? le') = cong skip! (∪-comm (sub le) (sub le'))
