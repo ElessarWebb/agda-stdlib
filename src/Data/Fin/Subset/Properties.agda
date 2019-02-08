@@ -88,6 +88,9 @@ nonempty? p = any? (_∈? p)
 ⊥-Empty : ∀ {n} → Empty {n} ⊥
 ⊥-Empty (_ , x∈⊥) = ∉⊥ x∈⊥
 
+⊥⇒Empty : ∀ {n} {p : Subset n} → p ≡ ⊥ → Empty p
+⊥⇒Empty refl = ⊥-Empty
+
 ⊥⊆ : ∀ {n} {p : Subset n} → ⊥ ⊆ p
 ⊥⊆ x∈⊥ = contradiction x∈⊥ ∉⊥
 
