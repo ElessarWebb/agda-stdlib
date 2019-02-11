@@ -181,6 +181,9 @@ module _ {a} {A : Set a} where
   ⊥⇒Empty : ∀ {l} {xs : Sublist l} → xs ≡ ⊥ → Empty xs
   ⊥⇒Empty {l} refl = ⊥-Empty {l}
 
+  ¬NonEmpty : ∀ {l} {xs : Sublist l} → ¬ (NonEmpty xs) → Empty xs
+  ¬NonEmpty emp = ∉-emptyˡ emp
+
   ⊥-unique : ∀ {l}{xs : Sublist l} → Empty xs → xs ≡ ⊥
   ⊥-unique {xs = base?} p = refl
   ⊥-unique {xs = skip? le} p with ⊥-unique {xs = sub le} p
