@@ -121,6 +121,22 @@ module _ {a} {A : Set a} where
   ∩-comm (keep? le) (skip? le') = cong skip! (∩-comm (sub le) (sub le'))
   ∩-comm (keep? le) (keep? le') = cong keep! (∩-comm (sub le) (sub le'))
 
+  ∪-identityˡ : ∀ {l} (xs : Sublist l) → ⊥ ∪ xs ≡ xs
+  ∪-identityˡ base? = refl
+  ∪-identityˡ (skip? le) = cong skip! (∪-identityˡ (sub le))
+  ∪-identityˡ (keep? le) = cong keep! (∪-identityˡ (sub le))
+
+  ∪-identityʳ : ∀ {l} (xs : Sublist l) → xs ∪ ⊥ ≡ xs
+  ∪-identityʳ xs = trans (∪-comm _ _) (∪-identityˡ xs)
+
+  ∩-identityˡ : ∀ {l} (xs : Sublist l) → ⊤ ∩ xs ≡ xs
+  ∩-identityˡ base? = refl
+  ∩-identityˡ (skip? le) = cong skip! (∩-identityˡ (sub le))
+  ∩-identityˡ (keep? le) = cong keep! (∩-identityˡ (sub le))
+
+  ∩-identityʳ : ∀ {l} (xs : Sublist l) → xs ∩ ⊤ ≡ xs
+  ∩-identityʳ xs = trans (∩-comm _ _) (∩-identityˡ xs)
+
   ∪-zeroˡ : ∀ {l} (xs : Sublist l) → ⊤ ∪ xs ≡ ⊤
   ∪-zeroˡ base? = refl
   ∪-zeroˡ (skip? le) = cong keep! (∪-zeroˡ (sub le))
@@ -184,6 +200,9 @@ module _ {a} {A : Set a} where
   ¬NonEmpty : ∀ {l} {xs : Sublist l} → ¬ (NonEmpty xs) → Empty xs
   ¬NonEmpty emp = ∉-emptyˡ emp
 
+  skip-Empty : ∀ {l} x (xs : Sublist l) → Empty xs → Empty (skip! {x} xs)
+  skip-Empty _ _ refl = refl
+
   ⊥-unique : ∀ {l}{xs : Sublist l} → Empty xs → xs ≡ ⊥
   ⊥-unique {xs = base?} p = refl
   ⊥-unique {xs = skip? le} p with ⊥-unique {xs = sub le} p
@@ -199,6 +218,15 @@ module _ {a} {A : Set a} where
   x∈only : ∀ {l x y} (i : x ∈ l) → y ∈ₛ only i → x ≡ y
   x∈only i (here refl) = refl
   x∈only i (there ())
+
+  splitAt⁺ : ∀ {xs} (n : ℕ) → (p : Sublist xs) →
+            ∃₂ λ (p₁ : Sublist xs) (p₂ : Sublist xs) → p₁ ∪ p₂ ≡ p × Empty (p₁ ∩ p₂)
+  splitAt⁺ zero p                    = ⊥ , p , ∪-identityˡ p , ⊥⇒Empty (∩-zeroˡ p)
+  splitAt⁺ (suc n) p@(sub {[]} le)   = p , ⊥ , ∪-identityʳ p , ⊥⇒Empty (∩-zeroʳ p)
+  splitAt⁺ (suc n) (sub (skip {y = x} le)) with splitAt⁺ n (sub le)
+  ... | p₁ , p₂ , co , ov = skip! p₁ , skip! p₂ , cong skip! co , skip-Empty x (p₁ ∩ p₂) ov
+  splitAt⁺ (suc n) (sub (keep {x = x} le)) with splitAt⁺ n (sub le)
+  ... | p₁ , p₂ , co , ov = keep! p₁ , skip! p₂ , cong keep! co , skip-Empty x (p₁ ∩ p₂) ov 
 
 module _ {a b} {A : Set a} {B : Set b} (f : A → B) where
   open ≡-Reasoning
