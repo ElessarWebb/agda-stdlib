@@ -10,6 +10,7 @@ module Data.List.Membership.Propositional.Properties where
 
 open import Algebra.FunctionProperties using (Op₂; Selective)
 open import Category.Monad using (RawMonad)
+open import Data.Empty
 open import Data.Bool.Base using (Bool; false; true; T)
 open import Data.Fin using (Fin)
 open import Data.List as List
@@ -28,7 +29,7 @@ import Data.Product.Relation.Pointwise.Dependent as Σ
 open import Data.Sum as Sum using (_⊎_; inj₁; inj₂)
 open import Function
 open import Function.Equality using (_⟨$⟩_)
-open import Function.Equivalence using (module Equivalence)
+open import Function.Equivalence as Eq using (module Equivalence)
 open import Function.Injection using (Injection; Injective; _↣_)
 open import Function.Inverse as Inv using (_↔_; module Inverse)
 import Function.Related as Related
@@ -260,6 +261,20 @@ module _ {a} {A : Set a} {_•_ : Op₂ A} where
 
 ------------------------------------------------------------------------
 -- Other properties
+
+-- no elements are members of l ↔ l is propositionally empty
+
+module _ {a} {A : Set a} where
+
+  ∉-emptyˡ : ∀ {l : List A} → ¬ (∃ λ x → x ∈ l) → l ≡ []
+  ∉-emptyˡ {[]} p = refl
+  ∉-emptyˡ {x ∷ l} p = ⊥-elim (p (x , (here refl)))
+
+  ∉-emptyʳ : ∀ {l : List A} → l ≡ [] → ¬ (∃ λ x → x ∈ l)
+  ∉-emptyʳ refl (fst , ())
+
+  ∉-empty : ∀ {l : List A} → (¬ (∃ λ x → x ∈ l)) Eq.⇔ l ≡ []
+  ∉-empty = Eq.equivalence ∉-emptyˡ ∉-emptyʳ
 
 -- Only a finite number of distinct elements can be members of a
 -- given list.
