@@ -16,7 +16,7 @@ open import Data.List.Any.Properties using (here-injective; there-injective)
 open import Data.List.Membership.Propositional as Mem
 open import Data.List.Membership.Propositional.Properties
 open import Data.List.Relation.Sublist.Propositional
-open import Data.List.Relation.Sublist.Propositional.Properties as SP hiding (bag⁺)
+open import Data.List.Relation.Sublist.Propositional.Properties as SP hiding (bag⁺; permute⁺)
 open import Data.Maybe as Maybe using (nothing; just)
 open import Data.Maybe.All as MAll using (nothing; just)
 open import Data.Nat.Base
@@ -90,6 +90,9 @@ module _ {a} {A : Set a} where
   _∩_ (keep? p) (skip? q) = skip! (sub p ∩ sub q)
   _∩_ (skip? p) (keep? q) = skip! (sub p ∩ sub q)
   _∩_ (skip? p) (skip? q) = skip! (sub p ∩ sub q)
+
+  Cover : ∀ {l} → (xs ys zs : Sublist l) → Set a
+  Cover xs ys zs = xs ∪ ys ≡ zs
 
   _◆_ : ∀ {l} → (xs ys : Sublist l) → Set a
   xs ◆ ys = Empty (xs ∩ ys)
@@ -219,14 +222,15 @@ module _ {a} {A : Set a} where
   x∈only i (here refl) = refl
   x∈only i (there ())
 
-  splitAt⁺ : ∀ {xs} (n : ℕ) → (p : Sublist xs) →
-            ∃₂ λ (p₁ : Sublist xs) (p₂ : Sublist xs) → p₁ ∪ p₂ ≡ p × Empty (p₁ ∩ p₂)
-  splitAt⁺ zero p                    = ⊥ , p , ∪-identityˡ p , ⊥⇒Empty (∩-zeroˡ p)
-  splitAt⁺ (suc n) p@(sub {[]} le)   = p , ⊥ , ∪-identityʳ p , ⊥⇒Empty (∩-zeroʳ p)
-  splitAt⁺ (suc n) (sub (skip {y = x} le)) with splitAt⁺ n (sub le)
-  ... | p₁ , p₂ , co , ov = skip! p₁ , skip! p₂ , cong skip! co , skip-Empty x (p₁ ∩ p₂) ov
-  splitAt⁺ (suc n) (sub (keep {x = x} le)) with splitAt⁺ n (sub le)
-  ... | p₁ , p₂ , co , ov = keep! p₁ , skip! p₂ , cong keep! co , skip-Empty x (p₁ ∩ p₂) ov 
+  splitAt⁺ : ∀ {xs ys} (n : ℕ) → (p : xs ⊆ ys) →
+             ∃₂ λ (p₁ : (take n xs) ⊆ ys) (p₂ : (drop n xs) ⊆ ys) →
+               Cover (sub p₁) (sub p₂) (sub p) × (sub p₁ ◆ sub p₂)
+  splitAt⁺ zero p           = ([]⊆ _) , p , ∪-identityˡ (sub p) , ⊥⇒Empty (∩-zeroˡ (sub p))
+  splitAt⁺ {[]   } (suc n) p   = p , ([]⊆ _) , ∪-identityʳ (sub p) , ⊥⇒Empty (∩-zeroʳ (sub p))
+  splitAt⁺ {_ ∷ _} (suc n) (skip {y = x} le) with splitAt⁺ (suc n) (le)
+  ... | p₁ , p₂ , co , ov    = skip p₁ , skip p₂ , cong skip! co , skip-Empty x (sub p₁ ∩ sub p₂) ov
+  splitAt⁺ {_ ∷ _} (suc n) (keep {x = x} le) with splitAt⁺ n (le)
+  ... | p₁ , p₂ , co , ov    = keep p₁ , skip p₂ , cong keep! co , skip-Empty x (sub p₁ ∩ sub p₂) ov 
 
 module _ {a b} {A : Set a} {B : Set b} (f : A → B) where
   open ≡-Reasoning
@@ -240,6 +244,10 @@ module _ {a b} {A : Set a} {B : Set b} (f : A → B) where
 module _ {a} {A : Set a} where
 
   open import Data.List.Relation.BagAndSetEquality
+  open import Data.List.Relation.Permutation.Inductive as LP using (_↭_)
+
+  permute⁺ : ∀ {xs ys : List A} → xs ↭ ys → Sublist xs → Sublist ys
+  permute⁺ f (sub le) = sub (proj₁ (proj₂ (SP.permute⁺ f le)))
 
   bag⁺ : ∀ {xs ys : List A} → xs ∼[ bag ] ys → Sublist xs → Sublist ys
   bag⁺ f (sub le) = sub (proj₁ (proj₂ (SP.bag⁺ f le))) 
